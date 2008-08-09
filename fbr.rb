@@ -1,6 +1,8 @@
 unless defined? Fiber
   require 'thread'
 
+  class FiberError < StandardError; end
+
   class Fiber
     def initialize
       @yield_q = Queue.new
@@ -18,7 +20,7 @@ unless defined? Fiber
     end
     
     def self.yield arg = nil
-      raise 'not allowed outside a Fiber' unless fiber = Thread.current[:fiber]
+      raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
       fiber.yield_q.push(arg)
       fiber.sleep_q.pop
     end
