@@ -19,16 +19,17 @@ unless defined? Fiber
     def resume *args
       raise FiberError, 'dead fiber called' unless @thread.alive?
       @resume.push(args)
-      @yield.pop
+      (ret = @yield.pop).size == 1 ? ret.first :
+                                     ret
     end
 
     def wait
       @resume.pop
     end
     
-    def self.yield arg = nil
+    def self.yield *args
       raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
-      fiber.yield.push(arg)
+      fiber.yield.push(args)
       (ret = fiber.wait).size == 1 ? ret.first :
                                      ret
     end
