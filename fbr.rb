@@ -29,8 +29,8 @@ unless defined? Fiber
     def self.yield arg = nil
       raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
       fiber.yield.push(arg)
-      ret = fiber.wait
-      ret.size == 1 ? ret.first : ret
+      (ret = fiber.wait).size == 1 ? ret.first :
+                                     ret
     end
 
     def inspect
