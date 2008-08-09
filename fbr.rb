@@ -37,9 +37,11 @@ unless defined? Fiber
   end
 end
 
-f = Fiber.new{ puts 'hi'; Fiber.yield(1); puts 'bye'; :done }
-p f.resume
-p f.resume
+if __FILE__ == $0
+  f = Fiber.new{ puts 'hi'; Fiber.yield(1); puts 'bye'; :done }
+  p f.resume
+  p f.resume
+end
 
 __END__
 
