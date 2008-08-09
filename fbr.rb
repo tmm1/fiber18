@@ -5,6 +5,8 @@ unless defined? Fiber
 
   class Fiber
     def initialize
+      raise ArgumentError, 'new Fiber requires a block' unless block_given?
+
       @yield = Queue.new
       @sleeper = Queue.new
 
