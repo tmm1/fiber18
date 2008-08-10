@@ -1,3 +1,6 @@
+# Poor Man's Fiber (API compatible Thread based Fiber implementation for Ruby 1.8)
+# (c) 2008 Aman Gupta (tmm1)
+
 unless defined? Fiber
   require 'thread'
 
@@ -34,6 +37,10 @@ unless defined? Fiber
       result.size > 1 ? result : result.first
     end
 
+    def self.current
+      Thread.current[:fiber] or raise FiberError, 'not inside a fiber'
+    end
+
     def inspect
       "#<#{self.class}:0x#{self.object_id.to_s(16)}>"
     end
@@ -61,3 +68,4 @@ hi
 2
 bye
 :done
+
