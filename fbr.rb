@@ -10,7 +10,7 @@ unless defined? Fiber
       @yield = Queue.new
       @resume = Queue.new
 
-      @thread = Thread.new{ @yield.push([*yield(*wait)]) }
+      @thread = Thread.new{ @yield.push [*yield(*wait)] }
       @thread.abort_on_exception = true
       @thread[:fiber] = self
     end
