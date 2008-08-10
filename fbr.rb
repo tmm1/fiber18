@@ -13,11 +13,11 @@ unless defined? Fiber
       @yield = Queue.new
       @resume = Queue.new
 
-      @thread = Thread.new{ @yield.push [*yield(*wait)] }
+      @thread = Thread.new{ @yield.push [ *yield(*@resume.pop) ] }
       @thread.abort_on_exception = true
       @thread[:fiber] = self
     end
-    attr_reader :yield, :thread
+    attr_reader :thread
 
     def resume *args
       raise FiberError, 'dead fiber called' unless @thread.alive?
@@ -25,16 +25,16 @@ unless defined? Fiber
       result = @yield.pop
       result.size > 1 ? result : result.first
     end
-
-    def wait
-      @resume.pop
+    
+    def yield *args
+      @yield.push(args)
+      result = @resume.pop
+      result.size > 1 ? result : result.first
     end
     
     def self.yield *args
       raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
-      fiber.yield.push(args)
-      result = fiber.wait
-      result.size > 1 ? result : result.first
+      fiber.yield(*args)
     end
 
     def self.current
