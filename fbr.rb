@@ -19,8 +19,8 @@ unless defined? Fiber
     def resume *args
       raise FiberError, 'dead fiber called' unless @thread.alive?
       @resume.push(args)
-      (ret = @yield.pop).size == 1 ? ret.first :
-                                     ret
+      result = @yield.pop
+      result.size > 1 ? result : result.first
     end
 
     def wait
@@ -30,8 +30,8 @@ unless defined? Fiber
     def self.yield *args
       raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
       fiber.yield.push(args)
-      (ret = fiber.wait).size == 1 ? ret.first :
-                                     ret
+      result = fiber.wait
+      result.size > 1 ? result : result.first
     end
 
     def inspect
