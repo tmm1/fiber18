@@ -40,6 +40,8 @@ class TestFiber < Test::Unit::TestCase
       }
     )
   end
+end
+__END__
 
   def test_many_fibers_with_threads
     max = 1000

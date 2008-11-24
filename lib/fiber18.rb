@@ -14,7 +14,7 @@ unless defined? Fiber
       @yield = Queue.new
       @resume = Queue.new
 
-      @thread = Thread.new{ @yield.push [ *yield(*@resume.pop) ] }
+      @thread = Thread.new{ @yield.push [yield(*@resume.pop)] }
       @thread.abort_on_exception = true
       @thread[:fiber] = self
     end
@@ -34,16 +34,33 @@ unless defined? Fiber
     end
 
     def self.yield *args
-      raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
-      fiber.yield(*args)
+      if fiber = Thread.current[:fiber]
+        fiber.yield(*args)
+      else
+        raise FiberError, 'not inside a fiber'
+      end
     end
 
     def self.current
+      if Thread.current == Thread.main
+        return Thread.main[:fiber] ||= RootFiber.new
+      end
+
       Thread.current[:fiber] or raise FiberError, 'not inside a fiber'
     end
 
     def inspect
       "#<#{self.class}:0x#{self.object_id.to_s(16)}>"
+    end
+  end
+
+  class RootFiber < Fiber
+    def initialize
+      # XXX: what is a root fiber anyway?
+    end
+
+    def self.yield *args
+      raise FiberError, "can't yield from root fiber"
     end
   end
 end
