@@ -1,0 +1,21 @@
+Poor Man's Fiber (API compatible Thread based Fiber implementation for Ruby 1.8)
+  (c) 2008 Aman Gupta (tmm1)
+
+== Usage
+
+f = Fiber.new{ |sym|
+  p(sym)
+  puts 'hi'
+  p(Fiber.yield 1)
+  puts 'bye'
+  :end
+}
+p(f.resume :begin)
+p(f.resume 2)
+
+:begin
+hi
+1
+2
+bye
+:end
