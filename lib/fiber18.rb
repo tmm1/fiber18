@@ -2,6 +2,7 @@
 # (c) 2008 Aman Gupta (tmm1)
 
 unless defined? Fiber
+  $:.unshift File.expand_path(File.dirname(__FILE__)) + '/compat'
   require 'thread'
 
   class FiberError < StandardError; end
@@ -25,13 +26,13 @@ unless defined? Fiber
       result = @yield.pop
       result.size > 1 ? result : result.first
     end
-    
+
     def yield *args
       @yield.push(args)
       result = @resume.pop
       result.size > 1 ? result : result.first
     end
-    
+
     def self.yield *args
       raise FiberError, "can't yield from root fiber" unless fiber = Thread.current[:fiber]
       fiber.yield(*args)
@@ -48,24 +49,31 @@ unless defined? Fiber
 end
 
 if __FILE__ == $0
-  f = Fiber.new{ puts 'hi'; p Fiber.yield(1); puts 'bye'; :done }
-  p f.resume
-  p f.resume(2)
+  f = Fiber.new{ |sym|
+    p(sym)
+    puts 'hi'
+    p(Fiber.yield 1)
+    puts 'bye'
+    :end
+  }
+  p(f.resume :begin)
+  p(f.resume 2)
 end
 
 __END__
 
-$ ruby fbr.rb 
+$ ruby fbr.rb
+:begin
 hi
 1
 2
 bye
-:done
+:end
 
-$ ruby1.9 fbr.rb 
+$ ruby1.9 fbr.rb
+:begin
 hi
 1
 2
 bye
-:done
-
+:end
