@@ -3,7 +3,6 @@
 
 unless defined? Fiber
   $:.unshift File.expand_path(File.dirname(__FILE__)) + '/compat'
-  require 'thread'
 
   class FiberError < StandardError; end
 
@@ -11,26 +10,36 @@ unless defined? Fiber
     def initialize
       raise ArgumentError, 'new Fiber requires a block' unless block_given?
 
-      @yield = Queue.new
-      @resume = Queue.new
+      @alive = true
 
-      @thread = Thread.new{ @yield.push [yield(*@resume.pop)] }
-      @thread.abort_on_exception = true
-      @thread[:fiber] = self
+      unless @yield = callcc{|c| c }
+        @ret = yield @ret
+        @alive = false
+        @resume.call
+      end
     end
     attr_reader :thread
 
     def resume *args
-      raise FiberError, 'dead fiber called' unless @thread.alive?
-      @resume.push(args)
-      result = @yield.pop
-      result.size > 1 ? result : result.first
+      raise FiberError, 'dead fiber called' unless @alive
+
+      if @resume = callcc{|c| c }
+        Thread.current[:fiber] = self
+        @ret = args.size > 1 ? args : args.first
+        @yield.call
+      end
+
+      Thread.current[:fiber] = nil
+      @ret
     end
 
     def yield *args
-      @yield.push(args)
-      result = @resume.pop
-      result.size > 1 ? result : result.first
+      if @yield = callcc{|c| c }
+        @ret = args.size > 1 ? args : args.first
+        @resume.call
+      end
+
+      @ret
     end
 
     def self.yield *args
