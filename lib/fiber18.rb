@@ -51,11 +51,10 @@ unless defined? Fiber
     end
 
     def self.current
-      if Thread.current == Thread.main
-        return Thread.main[:fiber] ||= RootFiber.new
-      end
+      # XXX don't raise error, assume its the RootFiber
+      # Thread.current[:fiber] or raise FiberError, 'not inside a fiber'
 
-      Thread.current[:fiber] or raise FiberError, 'not inside a fiber'
+      Thread.current[:fiber] or RootFiber.instance
     end
 
     def inspect
@@ -63,12 +62,20 @@ unless defined? Fiber
     end
   end
 
+  require 'singleton'
+
   class RootFiber < Fiber
+    include Singleton
+
     def initialize
-      # XXX: what is a root fiber anyway?
+      # no block required
     end
 
-    def self.yield *args
+    def resume *args
+      raise FiberError, "can't resume root fiber"
+    end
+
+    def yield *args
       raise FiberError, "can't yield from root fiber"
     end
   end
