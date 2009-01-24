@@ -24,12 +24,12 @@ unless defined? Fiber
       raise FiberError, 'dead fiber called' unless @alive
 
       if @resume = callcc{|c| c }
-        Thread.current[:fiber] = self
+        prev_fiber, Thread.current[:fiber] = Thread.current[:fiber], self
         @ret = args.size > 1 ? args : args.first
         @yield.call
       end
 
-      Thread.current[:fiber] = nil
+      Thread.current[:fiber] = prev_fiber
       @ret
     end
 
